@@ -1,0 +1,14 @@
+# Use the official Python 3.11 image from the Docker Hub
+FROM python:3.11-slim
+
+# Set the working directory in the container
+WORKDIR /usr/src/app
+
+# Just copy the whole directory for debugging
+COPY . .
+
+# List the files to confirm they're copied
+RUN ls -la
+
+# Execute the code
+CMD ["python", "code_to_run.py"]

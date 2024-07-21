@@ -1,16 +1,55 @@
-{% extends "base.html" %}
-{% block title %}{{ problem.title }}{% endblock %}
-{% block content %}
-<h1>{{ problem.title }}</h1>
-<p>{{ problem.content }}</p>
-<form method="POST" action="{{ url_for('submit', problem_id=problem.id) }}">
-    {{ form.hidden_tag() }}
-    <div class="form-group">
-        {{ form.code.label }}
-        {{ form.code(class_="form-control") }}
-    </div>
-    <div class="form-group">
-        {{ form.submit(class_="btn btn-primary") }}
-    </div>
-</form>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetCode Example</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" integrity="sha512-8nP4y8Zx8cLgC36rHXVshh1+cYIBsQUB1GxIGZ2ECzY1TE+ft2w4yYZ4A6UOHeZ8dk+5PNozJd9G5Vq5+Im8pA==" crossorigin="anonymous"></script>
+    <style>
+        #editor { height: 300px; width: 100%; }
+        #result { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1 id="problem-title">Problem Title</h1>
+    <div id="problem-statement">Problem statement will be here.</div>
+    <div id="editor">print("Hello World")</div>
+    <button onclick="runCode()">Run Code</button>
+    <div id="result"></div>
+
+    <script>
+        // Initialize the Ace Editor
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/python");
+
+        function runCode() {
+            var code = editor.getValue();
+            fetch('/run', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code: code })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerText = data.result;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function loadProblem() {
+            fetch('/problem')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('problem-title').innerText = data.title;
+                document.getElementById('problem-statement').innerText = data.statement;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        window.onload = loadProblem;
+    </script>
+</body>
+</html>
