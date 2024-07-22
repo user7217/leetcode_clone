@@ -13,12 +13,12 @@
   <h1>Python Code Executor</h1>
   
   <label for="problem">Problem Statement:</label>
-  <textarea id="problem" rows="4">Describe the problem here...</textarea><br>
+  <div id="problem"></div><br>
   
-  <label for="test-cases">Test Cases (one per line, formatted as input:expected_output):</label>
-  <textarea id="test-cases" rows="4">input1:expected_output1\ninput2:expected_output2</textarea><br>
+  <label for="test-cases">Test Cases:</label>
+  <div id="test-cases"></div><br>
   
-  <div id="editor">print("Hello, world!")</div>
+  <div id="editor"></div>
   <button onclick="runCode()">Run</button>
   <div id="output"></div>
 
@@ -29,21 +29,58 @@
 
     function runCode() {
       var code = editor.getValue();
-      var problem = document.getElementById('problem').value;
-      var testCases = document.getElementById('test-cases').value.split('\n').map(tc => {
-        const [input, expected] = tc.split(':');
-        return { input, expected };
-      });
+      var testCases = document.getElementById('test-cases').dataset.testCases;
+      testCases = JSON.parse(testCases);
       
       fetch('/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code, problem: problem, testCases: testCases })
+        body: JSON.stringify({ code: code, testCases: testCases })
       })
       .then(response => response.json())
-      .then(data => document.getElementById('output').textContent = data.result)
+      .then(data => {
+        const outputDiv = document.getElementById('output');
+        outputDiv.innerHTML = ''; // Clear previous output
+        data.results.forEach((result, index) => {
+          const resultElement = document.createElement('div');
+          resultElement.innerHTML = `
+            <strong>Test Case ${index + 1}</strong><br>
+            Input: ${result.input}<br>
+            Expected Output: ${result.expected}<br>
+            Actual Output: ${result.output}<br>
+            Passed: ${result.passed ? 'Yes' : 'No'}
+            <hr>
+          `;
+          outputDiv.appendChild(resultElement);
+        });
+      })
       .catch(error => console.error('Error:', error));
     }
+
+    function loadProblem() {
+      fetch('/problems')
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('problem').textContent = data.problem;
+        document.getElementById('test-cases').textContent = data.testCases.map(tc => `Input: ${tc.input}, Expected: ${tc.expected}`).join('\n');
+        document.getElementById('test-cases').dataset.testCases = JSON.stringify(data.testCases);
+      })
+      .catch(error => console.error('Error:', error));
+    }
+
+    function loadTemplate() {
+      fetch('/template')
+      .then(response => response.json())
+      .then(data => {
+        editor.setValue(data.code, -1); // -1 to move cursor to start
+      })
+      .catch(error => console.error('Error:', error));
+    }
+
+    window.onload = function() {
+      loadProblem();
+      loadTemplate();
+    };
   </script>
 </body>
 </html>

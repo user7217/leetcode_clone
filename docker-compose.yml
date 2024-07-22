@@ -1,0 +1,14 @@
+version: '3'
+services:
+  flask-app:
+    build: .
+    ports:
+      - "5000:5000"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.50'
+        reservations:
+          memory: 64M
+          cpus: '0.25'
