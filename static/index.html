@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Run Python Code</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/ace.js" integrity="sha512-..." crossorigin="anonymous"></script>
+  <style>
+    #editor { height: 300px; width: 600px; }
+    #output { white-space: pre-wrap; border: 1px solid #ccc; padding: 10px; margin-top: 10px; }
+    #problem, #test-cases { width: 600px; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Python Code Executor</h1>
+  
+  <label for="problem">Problem Statement:</label>
+  <textarea id="problem" rows="4">Describe the problem here...</textarea><br>
+  
+  <label for="test-cases">Test Cases (one per line, formatted as input:expected_output):</label>
+  <textarea id="test-cases" rows="4">input1:expected_output1\ninput2:expected_output2</textarea><br>
+  
+  <div id="editor">print("Hello, world!")</div>
+  <button onclick="runCode()">Run</button>
+  <div id="output"></div>
+
+  <script>
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.session.setMode("ace/mode/python");
+
+    function runCode() {
+      var code = editor.getValue();
+      var problem = document.getElementById('problem').value;
+      var testCases = document.getElementById('test-cases').value.split('\n').map(tc => {
+        const [input, expected] = tc.split(':');
+        return { input, expected };
+      });
+      
+      fetch('/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code, problem: problem, testCases: testCases })
+      })
+      .then(response => response.json())
+      .then(data => document.getElementById('output').textContent = data.result)
+      .catch(error => console.error('Error:', error));
+    }
+  </script>
+</body>
+</html>
